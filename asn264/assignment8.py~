@@ -1,0 +1,64 @@
+'''
+Author: Aditi Nair (asn264)
+Date: November 10 2015
+
+This program prompts the user for a list of positive, integer-valued positions separated by commas.
+Then it prompts for a positive integer representing the number of trials to run. Then, for each position 
+provided in the list, the program computes how many shares of that position value can be bought with $1000
+and runs the appropriate number of trials on that number of shares. For each position provided, the
+program computes the mean and standard deviation of the trial results over all shares bought. It
+prints these into the file results.txt and, for each position, creates a histogram of trial results
+in a file called - for example - histogram_0100_pos.pdf when the position is 100.
+ 
+'''
+
+from Interactions import *
+import matplotlib.pyplot as plt
+
+def main():
+
+	#Get a list of positive, integer-valued shares from the user and parse it as a list of Position objects
+	positions = get_list()
+
+	#Get a positive, integer-valued number of trials from the user and parse it as an int
+	num_trials = get_int()
+	
+	txt = open("results.txt", 'wb')	
+
+    #Each position has value = 1000/nshares. This is handled in the get_list function where user input is cast as Position objects.
+	for p in positions:
+
+		#Create cumu_ret and daily_ret which will be of length = num_trials and populated with the results of num_trials simulations
+		cumu_ret = np.zeros(num_trials)
+		daily_ret = np.zeros(num_trials)
+
+		#Run the trials and record the results
+		for ctrial in range(num_trials):
+		
+			#Each index in cumu_ret is the cumulative return on a single-day simulation with the current position
+			cumu_ret[ctrial] = p.simulate()		
+
+			#Each index in daily_ret is the normalized return on a single-day simulation with the current position
+			daily_ret[ctrial] = (cumu_ret[ctrial]/1000.0) - 1
+
+		#Compute the mean and standard deviation and write to results.txt
+		txt.write("For Position = " + str(p.nshares) + ":\n")
+		txt.write("Expected Value of Daily Return: " + str(np.mean(daily_ret)) + "\n")
+		txt.write("Standard Deviation of Daily Return: " + str(np.std(daily_ret)) + "\n\n")	
+
+		#print the histogram of results to distinct pdfs with the correct naming convention
+		plot_hist(p.nshares, daily_ret)
+
+	txt.close()
+
+def plot_hist(nshares, ret):
+	zeroes = "0"*(4-len(str(nshares)))
+	plt.hist(ret, 100, range=[-1,1])
+	plt.savefig("histogram_"+zeroes+str(nshares)+"_pos.pdf")
+	plt.clf()
+
+#Run the program
+if __name__ == "__main__":
+	main()
+
+		

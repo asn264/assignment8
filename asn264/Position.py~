@@ -1,0 +1,52 @@
+
+import numpy as np
+from UnfairCoin import UnfairCoin
+
+class InvalidPositionError(Exception):
+	'''Raised when an invalid n_shares value (ie position) is passed to the Position object.'''
+    
+	def __str__(self):
+		return "Invalid position."
+
+class Position(object):
+	'''Represents a set of shares with total value $1000 on the following investment:
+	With a one-day holding time, there is 51% chance the return is 1 (value doubles) and 49% chance that the return is -1 (all value is lost).'''
+
+	def __init__(self, n_shares):
+		'''Each position is associated with: initial investment value (1000), number of shares, an unfair coin, and an array with entries representing each share's value'''
+
+		self.investment = 1000
+		self.nshares = n_shares
+		
+		#You can only buy the shares in $1, $10, $100, $1000 denominations so nshares must be 1000, 100, 10 or 1
+        	if self.nshares not in [1,10,100,1000]:
+			raise InvalidPositionError
+
+		else:
+			self.heads_return = 2 #Know that returns are either x0 or x2. Associate flipping heads on the coin with a x2 return. 
+			self.coin = UnfairCoin()	
+			self.shares = np.empty(self.nshares) #Array representing the position (set of shares). Each is valued at 1000/n_shares.
+			self.shares.fill(self.investment/self.nshares)		
+
+	def n_flips(self):
+		'''Flip an unfair coin nshares number of times.'''
+	
+		flips = []
+		for f in range(self.nshares):
+			flips.append(self.coin.flip())	
+		return np.asarray(flips)
+
+	def evaluate_return(self,arr):
+		'''Take a flip array and convert it to corresponding returns array: 2 for heads (1) and 0 for tails (0) using elementwise multiplication'''
+	
+		return arr*self.heads_return
+	
+	def simulate(self):
+		'''Flip a coin for each share and update the array values accordingly. Return the new value of the investment. '''
+		'''With heads (1), double the investment. With tails (0), the investment is lost.'''
+
+	        #flip a coin nshares number of times and evaluate the return that each flip corresponds to.
+            	#the return on investment is the sum of the element-wise product of evaluation*shares
+		return (self.evaluate_return(self.n_flips()) * self.shares).sum()
+
+
